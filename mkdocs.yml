@@ -1,0 +1,99 @@
+## Site details
+site_name: 'Sumner Docs &middot; JAX'
+site_description: 'Documentation about HPC Sumner'
+site_author: 'Samir B. Amin'
+site_url: 'https://sumner.verhaaklab.com'
+## enable 'edit this page' link
+repo_edit: true
+repo_name: 'TheJacksonLaboratory/sumnerdocs'
+repo_url: 'https://github.com/TheJacksonLaboratory/sumnerdocs'
+## add last modified, require git-revision-date-localized plugin
+last_modtime: true
+
+## set auto nav
+## mkdocs will populate pages using alphanumeric sort of all .md files under docs/
+# nav:
+#     - Home: index.md
+#     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
+
+## Copyright
+copyright: 'Copyright &copy; 2017 - 2020 <a href="https://www.jax.org">The Jackson Laboratorye</a>'
+
+## Configuration
+theme:
+  name: null
+  custom_dir: 'theme-mkdocs-material/material'
+  language: 'en'
+  palette:
+    primary: 'Blue'
+    accent: 'Blue'
+  font:
+    text: 'IBM Plex Sans'
+    code: 'Fira Code'
+  logo: '/assets/images/sumner_logo_raw.png'
+  favicon: '/assets/images/favicon/apple-icon-180x180.png'
+  feature:
+    tabs: false
+
+extra_css:
+  - 'assets/css/katex.css'
+  - 'https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css'
+
+extra_javascript:
+  - 'assets/js/katex.js'
+  - 'https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js'
+  - 'https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js'
+
+extra:
+  # disqus: 'verhaaklab'
+  social:
+    - type: 'envelope'
+      link: 'https://hpctalk.jax.org'
+    - type: 'twitter'
+      link: 'https://twitter.com/jacksonlab'
+    - type: 'github'
+      link: 'https://github.com/TheJacksonLaboratory/sumnerdocs'
+  search:
+    tokenizer: '[\s\-\.]+'
+  twittercard:
+    user: jacksonlab
+    logourl: '/assets/images/favicon/apple-icon-180x180.png'
+
+# Google Analytics
+# google_analytics:
+#   - 'UA-123456-78'
+#   - 'auto'
+
+markdown_extensions:
+  - admonition
+  - fontawesome_markdown
+  - codehilite:
+      guess_lang: false
+      linenums: true
+  - toc:
+      permalink: true
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - meta
+  - footnotes
+  - pymdownx.emoji
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.betterem:
+      smart_enable: all
+  # - pymdownx.arithmatex:
+  #     generic: true
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      type: date
+  - minify:
+      minify_html: true
