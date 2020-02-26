@@ -12,7 +12,7 @@ fi
 
 ## build docs
 cd "$DOCDIR" && \
-mkdocs build --clean && echo -e "\nINFO: Built updated docs\n"
-## mkdocs gh-deploy --clean -m "published using commit: {sha} and mkdocs {version}"
+mkdocs build --clean && echo -e "\nINFO: Built updated docs\n" && \
+mkdocs gh-deploy --clean -m "published using commit: {sha} and mkdocs {version}"
 
 ## END ##
