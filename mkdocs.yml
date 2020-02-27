@@ -1,9 +1,12 @@
 ## Site details
 site_name: 'Sumner Docs &middot; JAX'
 site_description: 'Documentation about HPC Sumner'
+## override by page YAML header meta: authors
 site_author: 'Samir B. Amin'
+## Should be ported to ~sumner.jax.org
 site_url: 'https://sumner.verhaaklab.com'
 ## enable 'edit this page' link
+## user needs to fork repo, edit contents, and send pull req.
 repo_edit: true
 repo_name: 'TheJacksonLaboratory/sumnerdocs'
 repo_url: 'https://github.com/TheJacksonLaboratory/sumnerdocs'
@@ -20,9 +23,10 @@ nav:
     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
 
 ## Copyright
-copyright: 'Copyright &copy; 2017 - 2020 <a href="https://www.jax.org">The Jackson Laboratorye</a>'
+copyright: 'Copyright &copy; <a href="https://www.jax.org">The Jackson Laboratory</a> | <a href="https://www.jax.org/terms-of-use">Terms of Use</a>'
 
-## Configuration
+#### Configuration ####
+## Change logo, favicon, etc.
 theme:
   name: null
   custom_dir: 'theme-mkdocs-material/material'
@@ -30,6 +34,7 @@ theme:
   palette:
     primary: 'Blue'
     accent: 'Blue'
+  ## google fonts
   font:
     text: 'IBM Plex Sans'
     code: 'Fira Code'
