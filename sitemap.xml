@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
      <loc>https://sumner.verhaaklab.com/</loc>
-     <lastmod>2020-02-26</lastmod>
+     <lastmod>2020-02-27</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://sumner.verhaaklab.com/conda/S01_conda/</loc>
-     <lastmod>2020-02-26</lastmod>
+     <lastmod>2020-02-27</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://sumner.verhaaklab.com/containers/S01_containers/</loc>
-     <lastmod>2020-02-26</lastmod>
+     <lastmod>2020-02-27</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://sumner.verhaaklab.com/slurm/S01_slurm101/</loc>
-     <lastmod>2020-02-26</lastmod>
+     <lastmod>2020-02-27</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
