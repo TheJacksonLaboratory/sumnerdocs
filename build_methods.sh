@@ -3,7 +3,7 @@
 ## strict check
 set -euo pipefail
 
-DOCDIR="$HOME"/Dropbox/acad/scripts/github/sumner
+DOCDIR="$HOME"/Dropbox/acad/scripts/github/sumnerdocs
 
 if [[ ! -d "$DOCDIR" || ! -x "$DOCDIR" ]]; then
 	echo -e "\nERROR: DOCDIR does not exists or not accesible at $DOCDIR\n" >&2

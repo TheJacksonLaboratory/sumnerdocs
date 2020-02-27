@@ -6,7 +6,7 @@ site_url: 'https://thejacksonlaboratory.github.io/sumnerdocs/'
 ## enable 'edit this page' link
 repo_edit: true
 repo_name: 'TheJacksonLaboratory/sumnerdocs'
-repo_url: 'https://github.com/TheJacksonLaboratory/sumnerdocs'
+repo_url: 'https://sumner.verhaaklab.com'
 ## add last modified, require git-revision-date-localized plugin
 last_modtime: true
 
