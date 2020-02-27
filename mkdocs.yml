@@ -2,19 +2,22 @@
 site_name: 'Sumner Docs &middot; JAX'
 site_description: 'Documentation about HPC Sumner'
 site_author: 'Samir B. Amin'
-site_url: 'https://thejacksonlaboratory.github.io/sumnerdocs/'
+site_url: 'https://sumner.verhaaklab.com'
 ## enable 'edit this page' link
 repo_edit: true
 repo_name: 'TheJacksonLaboratory/sumnerdocs'
-repo_url: 'https://sumner.verhaaklab.com'
+repo_url: 'https://github.com/TheJacksonLaboratory/sumnerdocs'
 ## add last modified, require git-revision-date-localized plugin
 last_modtime: true
 
 ## set auto nav
 ## mkdocs will populate pages using alphanumeric sort of all .md files under docs/
-# nav:
-#     - Home: index.md
-#     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
+nav:
+    - 'Home': index.md
+    - 'Set Up Conda': conda/S01_conda.md
+    - 'Set Up Containers': containers/S01_containers.md
+    - 'Working with Slurm': slurm/S01_slurm101.md
+    - 'User Forum (intranet)': 'https://hpctalk.jax.org'
 
 ## Copyright
 copyright: 'Copyright &copy; 2017 - 2020 <a href="https://www.jax.org">The Jackson Laboratorye</a>'
