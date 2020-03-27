@@ -16,9 +16,11 @@ last_modtime: true
 ## set auto nav
 ## mkdocs will populate pages using alphanumeric sort of all .md files under docs/
 nav:
-    - 'Home': index.md
-    - 'Set Up Conda': conda/S01_conda.md
-    - 'Set Up Containers': containers/S01_containers.md
+    - Home: index.md
+    - Set Up Conda: conda/S01_conda.md
+    - Set Up Containers:
+      - Getting Started: containers/S01_containers.md
+      - containers/ensembl-vep.md
     - 'Working with Slurm': slurm/S01_slurm101.md
     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
 
