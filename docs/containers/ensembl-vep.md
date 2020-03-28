@@ -5,13 +5,17 @@ title: "How to run VEP using singularity"
 >For HPC Sumner at [JAX](https://jax.org)  
 >@sbamin  
 
+[![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://jaxreg.jax.org/collections/20)
+
 ### Install VEP via docker
 
 *   Download [docker image for vep](https://hub.docker.com/r/ensemblorg/ensembl-vep) and convert to singularity .sif format
 
 ```sh
 ## v99.2 but may vary for future dates
-singularity run ensembl-vep_latest
+singularity run docker://ensemblorg/ensembl-vep:latest
+## OR specific version
+singularity run docker://ensemblorg/ensembl-vep:release_99.2
 ```
 
 *   Converted image should be under followig path.
@@ -60,9 +64,47 @@ tar xzf homo_sapiens_vep_99_GRCh37.tar.gz
 *   **NOTE:** Using `--assembly GRCh37` here for hg19 coordinates. Omitting it will default to the most current assembly, GRCh38.
 
 ```sh
-singularity run "${SINGULARITY_SIF}"/ensembl-vep_v99.2.sif vep --offline --dir_cache "${RVANNOT}/vep_core/v99" --species homo_sapiens --assembly GRCh37 --compress_output gzip -o ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.vep.vcf.gz -i /projects/verhaak-lab/ecdna/datasets/pcawg/dump/final_consensus_12oct/icgc/snv_mnv/ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.vcf.gz
+singularity run "${SINGULARITY_SIF}"/ensembl-vep_v99.2.sif vep --offline --vcf --dir_cache "${RVANNOT}/vep_core/v99" --species homo_sapiens --assembly GRCh37 -o ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.vep.vcf -i /projects/verhaak-lab/ecdna/datasets/pcawg/dump/final_consensus_12oct/icgc/snv_mnv/ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.vcf.gz
 
-singularity run "${SINGULARITY_SIF}"/ensembl-vep_v99.2.sif vep --offline --dir_cache "${RVANNOT}/vep_core/v99" --species homo_sapiens --assembly GRCh37 --compress_output gzip -o ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20161006.somatic.indel.vep.vcf.gz -offline -i /projects/verhaak-lab/ecdna/datasets/pcawg/dump/final_consensus_12oct/icgc/indel/ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20161006.somatic.indel.vcf.gz
+singularity run "${SINGULARITY_SIF}"/ensembl-vep_v99.2.sif vep --offline --vcf --dir_cache "${RVANNOT}/vep_core/v99" --species homo_sapiens --assembly GRCh37 -o ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20161006.somatic.indel.vep.vcf -offline -i /projects/verhaak-lab/ecdna/datasets/pcawg/dump/final_consensus_12oct/icgc/indel/ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20161006.somatic.indel.vcf.gz
+```
+
+### How to run vcf2maf
+
+*   If you are running vcf2maf, it needs input vcf in uncompressed format. vcf2maf will internally run `vep`, so you may not need to run vep separately.
+
+*   Review how-to-run details at [mskcc/vcf2maf](https://github.com/mskcc/vcf2maf) and by reading manpage. You may endup getting **incorrectly parsed maf** if certain parameters are not specified per requirement, e.g., `--tumor-id` and `--normal-id` requirements for vcfs with tumor, normal samples.
+
+```sh
+singularity exec "${SINGULARITY_SIF}"/vcf2maf_v1.0_a071af6.sif /opt/vcf2maf/vcf2maf.pl --help
+```
+
+*   vcf2maf requires several dependencies. If you get an error, [check out this detailed guide](https://gist.github.com/ckandoth/5390e3ae4ecf182fa92f6318cfa9fa97). If error persists, please [search and/or submit an issue at mskcc/vcf2maf](https://github.com/mskcc/vcf2maf/issues).
+
+```sh
+VEP_DIR=/opt/vep/src/ensembl-vep
+VEP_DATA="${RVANNOT}"/vep_core/v99
+REF_FASTA=/projects/verhaak-lab/hg19broad/Homo_sapiens_assembly19.fasta
+EXAC_VCF=/projects/verhaak-lab/verhaak_env/core_annots/exac/ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz
+
+export VEP_DIR VEP_DATA REF_FASTA EXAC_VCF
+```
+
+*   In contrast to singularity vep image, note the use of singularity exec and not singularity run command for singularity vcf2maf image.
+*   Note that this example does NOT use --tumor-id and --normal-id parameters as vcf does not have those columns. However, this may not be a case for vcf output from common somatic callers, like mutect2, varscan2, etc.
+*   Increasing vcf-forks more than 4 does not improve conversion exponentially, so there may not be need of increasing threads.
+
+```sh
+singularity exec "${SINGULARITY_SIF}"/vcf2maf_v1.0_a071af6.sif /opt/vcf2maf/vcf2maf.pl \
+--vep-path "${VEP_DIR}" \
+--vep-data "${VEP_DATA}" \
+--ref-fasta "${REF_FASTA}" \
+--filter-vcf "${EXAC_VCF}" \
+--vep-forks 4 \
+--species homo_sapiens \
+--ncbi-build GRCh37 \
+--input-vcf ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.vcf \
+--output-maf ffe4bb51-e98a-41a7-a4e1-c3970386889c.consensus.20160830.somatic.snv_mnv.maf
 ```
 
 _END_
