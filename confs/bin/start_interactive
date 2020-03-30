@@ -1,0 +1,72 @@
+#!/bin/bash
+
+## start or attach interactive session on one of N login nodes
+## @sbamin
+
+## using tmux v2.9
+## fail if can not determine login node ID
+## https://stackoverflow.com/a/28152985/1243763
+NODE_REGEX="^sumner-log(1$|2$)"
+if [[ ! "$(hostname)" =~ ${NODE_REGEX} ]]; then
+	echo -e "ERROR: Hostname: $(hostname) does not match required pattern for login nodes\nCan not start interactive session" >&2
+	exit 1
+fi
+
+## check if and where interactive session is running
+STATUS_INTJOB="$(squeue -u "${USER}" -O 'name' | grep -Eo "S[12]{1}INT")"
+STATUS_INTJOB="${STATUS_INTJOB:-NONE}"
+
+## start interactive session inside tmux session but avoid nested tmux sessions
+## Limitation: This won't start new interactive job if tmux session with same
+## session ID is already running but without any interactive session it it.
+if [[ "${STATUS_INTJOB}" == "NONE" && -z "${TMUX}" ]]; then
+	if [[ "$(hostname)" == "sumner-log1" ]]; then
+		## set tmux socket path specific to login node
+		TMUX_TMPDIR="${HOME}/logs/tmux/S1"
+		mkdir -p "${TMUX_TMPDIR}"
+
+		## cmd for interactive job with login node specific job name
+		INTJOB="$(printf "srun --job-name S1INT -p compute -q batch -N 1 -n 2 --mem 10G -t 02:00:00 --pty bash -l")"
+		## create new session or attach to existing one with same session ID
+		## and start interactive session
+		echo -e "\nStarting new session with interactive job: S1INT on $(hostname)\n"
+		tmux new-session -A -s S1 "eval ${INTJOB} ; read"
+	elif [[ "$(hostname)" == "sumner-log2" ]]; then
+		TMUX_TMPDIR="${HOME}/logs/tmux/S2"
+		mkdir -p "${TMUX_TMPDIR}"
+
+		INTJOB="$(printf "srun --job-name S2INT -p compute -q batch -N 1 -n 2 --mem 10G -t 02:00:00 --pty bash -l")"
+		echo -e "\nStarting new session with interactive job: S2INT on $(hostname)\n"
+		tmux new-session -A -s S2 "eval ${INTJOB} ; read"
+	fi
+## attach to tmux running interactive session given login node matches else quit
+elif [[ "${STATUS_INTJOB}" == "S1INT" && "$(hostname)" == "sumner-log1" ]]; then
+		## set tmux socket path specific to login node
+		TMUX_TMPDIR="${HOME}/logs/tmux/S1"
+		mkdir -p "${TMUX_TMPDIR}"
+
+		tmux new-session -A -s S1
+elif [[ "${STATUS_INTJOB}" == "S2INT" && "$(hostname)" == "sumner-log2" ]]; then
+		## set tmux socket path specific to login node
+		TMUX_TMPDIR="${HOME}/logs/tmux/S2"
+		mkdir -p "${TMUX_TMPDIR}"
+		
+		tmux new-session -A -s S2
+else
+cat << EOF >&2
+
+Something went wrong starting interactive job inside tmux session.
+	STATUS_INTJOB: ${STATUS_INTJOB}
+	HOSTNAME: $(hostname)
+
+If there is a mismatch between hostname and where interactive job is running,
+	try running again unless hostname and tmux server aligns!
+	ssh ${USER}@login.sumner.jax.org -t 'bash -l -c "start_interactive"'
+else
+	temporarily login to specific login node.
+	Please avoid hardcoding login node ID to respect load balancer.
+EOF
+	exit 1
+fi
+
+## END ##
