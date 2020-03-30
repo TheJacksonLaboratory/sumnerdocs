@@ -21,7 +21,9 @@ nav:
     - Set Up Containers:
       - Getting Started: containers/S01_containers.md
       - containers/ensembl-vep.md
-    - 'Working with Slurm': slurm/S01_slurm101.md
+    - Working with Slurm:
+      - Slurm 101: slurm/S01_slurm101.md
+      - slurm/how_to_interactive_via_tmux.md
     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
 
 ## Copyright
