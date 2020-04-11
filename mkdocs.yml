@@ -24,6 +24,7 @@ nav:
     - Working with Slurm:
       - Slurm 101: slurm/S01_slurm101.md
       - slurm/how_to_interactive_via_tmux.md
+      - slurm/how_to_snakemake_slurm.md
     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
 
 ## Copyright
