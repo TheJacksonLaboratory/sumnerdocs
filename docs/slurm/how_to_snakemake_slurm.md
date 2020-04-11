@@ -9,7 +9,7 @@ Compliant with JAX HPC Sumner (Cent OS7) using slurm v18.08.8 and [Snakemake v5.
 
 #### Setup
 
-*   `ssh sumner` and clone following repository
+*   `ssh sumner` and clone [TheJacksonLaboratory/toymake](https://github.com/TheJacksonLaboratory/toymake) repository.
 
 ```sh
 mkdir -p ~/pipelines/snakemake
