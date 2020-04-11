@@ -60,7 +60,7 @@ Something went wrong starting interactive job inside tmux session.
 	HOSTNAME: $(hostname)
 
 If there is a mismatch between hostname and where interactive job is running,
-	try running again unless hostname and tmux server aligns!
+	try running again until hostname and tmux server aligns!
 	ssh ${USER}@login.sumner.jax.org -t 'bash -l -c "start_interactive"'
 else
 	temporarily login to specific login node.
