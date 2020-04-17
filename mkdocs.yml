@@ -73,9 +73,9 @@ extra:
     logourl: '/assets/images/favicon/apple-icon-180x180.png'
 
 # Google Analytics
-# google_analytics:
-#   - 'UA-123456-78'
-#   - 'auto'
+google_analytics:
+  - 'UA-64053990-1'
+  - 'auto'
 
 markdown_extensions:
   - admonition
