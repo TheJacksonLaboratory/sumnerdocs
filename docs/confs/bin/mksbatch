@@ -1,0 +1,255 @@
+#!/bin/bash
+
+# Wrapper to make slurm sbatch job format on HPC Sumner at JAX
+# @sbamin | sumner slurm
+
+# usage
+show_help() {
+cat << EOF
+
+Wrapper to make slurm sbatch job format on HPC Sumner at JAX.
+
+For options, read sbatch manpage at
+https://slurm.schedmd.com/sbatch.html
+
+Usage: ${0##*/} -a <path to files containing commands>
+
+        -h  display this help and exit
+        -a  REQUIRED: path to file containing commands to be run on cluster. This file will be copied verbatim following SBATCH arguments.
+        -j  job name (default: j<random id>_username)
+        -w  work directory (default: present work directory)
+        -q  job queue (default: batch)
+        -t  walltime in HH:MM:SS (default: 02:00:00)
+        -m  memory in gb (default: 12G)
+        -n  number of nodes (default: 1)
+        -c  cpu cores per node (default: 2)
+        -p  email notifications (default: FAIL)
+        -s  if set to YES, export TMPDIR to /fastscratch/user/tmp (default: NO)
+        -e  extra options to SBATCH (will be appended to default ones: "--requeue --export=all")
+        -b  (Unused) node to exclude (default: none)
+        -x  Submit job (default: NO; YES to submit)
+
+Example: ${0##*/} -j "dummy" -t 01:00:00 -m 12gb -c 1 -a mycommands.sh
+
+Quotes are important for variable names containig spaces and special characters.
+
+EOF
+}
+
+if [[ $# == 0 ]];then show_help;exit 1;fi
+
+while getopts "a:j:w:q:t:m:n:c:p:e:s:b:x:h" opt; do
+    case "$opt" in
+        h) show_help;exit 0;;
+        a) MYARGS=$OPTARG;;
+        j) JOBNAME=$OPTARG;;
+        w) CWD=$OPTARG;;
+        q) QUEUE=$OPTARG;;
+        t) WALLTIME=$OPTARG;;
+        m) MEMORY=$OPTARG;;
+        n) NODES=$OPTARG;;
+        c) CPU=$OPTARG;;
+        p) EMAILOPTS=$OPTARG;;
+        e) EXTRA_OPTS=$OPTARG;;
+		s) SETTMP=$OPTARG;;
+        b) NODEXCL=$OPTARG;;
+		x) SUBMITJOB=$OPTARG;;
+       '?') show_help >&2 exit 1 ;;
+    esac
+done
+
+## Quit is no or empty file with command args
+if [[ ! -s ${MYARGS} ]];then
+    echo -e "\nERROR: Command file either does not exist at ${MYARGS} location or empty.\n"
+    show_help
+    exit 1
+fi
+
+## timestamp for sbatch file name
+TSTAMP=$(date +%d%b%y_%H%M%S%Z)
+
+## jobname
+if [[ "$(command -v make_jobid)" ]]; then
+  DJOBID=$(printf "%s_%s" "$(whoami)" "$(make_jobid)")
+else
+  DJOBID=$(printf "%s_%s" "$(whoami)" "$TSTAMP")
+fi
+
+TMP_JOBNAME=${JOBNAME:-"$DJOBID"}
+JOBNAME=$(printf "%s" "$TMP_JOBNAME")
+
+## job resources
+QUEUE=${QUEUE:-"batch"}
+WALLTIME=${WALLTIME:-"02:00:00"}
+MEMORY=${MEMORY:-"12G"}
+NODES=${NODES:-"1"}
+CPU=${CPU:-"2"}
+EMAILOPTS=${EMAILOPTS:-"FAIL"}
+SETTMP=${SETTMP:-"NO"}
+
+## Submit job
+SUBMITJOB=${SUBMITJOB:-"NO"}
+
+if [[ "${SETTMP}" == "YES" ]]; then
+	TMPDIR="/fastscratch/${USER}/tmp"
+	mkdir -p "$TMPDIR"
+	export TMPDIR
+	echo "INFO: TMPDIR is set to ${TMPDIR}"
+fi
+
+## workdir
+CWD=${CWD:-$(pwd)}
+
+## create work dir if it does not exists
+if [[ ! -d "${CWD}" ]]; then
+  mkdir -p "${CWD}" && \
+  echo "Created work dir: ${CWD}"
+fi
+
+## save output sbatch file with jobname and filename identical to command file
+SBATCHOUT="$(printf "%s/%s_%s.sbatch" "$CWD" "$JOBNAME" "$(basename "$MYARGS")")"
+
+if [[ -f "${SBATCHOUT}" ]]; then
+	echo -e "\nWARN: jobscript: ${SBATCHOUT} found and will be overwritten.\n" >&2
+fi
+
+## stdout and err
+STDOUT=$(printf "%s/log_%s.out" "${CWD}" "$JOBNAME")
+STDERR=$(printf "%s/log_%s.err" "${CWD}" "$JOBNAME")
+
+## force a node
+NODEXCL=${NODEXCL:-"NONE"}
+if [[ "$NODEXCL" != "NONE" ]]; then
+	echo -e "WARN: NODEXCL is set to $NODEXCL via -b\nHowever, this does nothing for now.\n" >&2
+fi
+
+## default extra options
+## make the jobs re-runnable, pass user env
+PASSOPTS="--requeue --export=all"
+
+## extra options
+EXTRA_OPTS=${EXTRA_OPTS:-"NONE"}
+
+if [[ "$EXTRA_OPTS" != "NONE" ]]; then
+	PASSOPTS_ALL="$(printf "%s %s" "$PASSOPTS" "${EXTRA_OPTS}")"
+	echo -e "INFO: EXTRA_OPTS is set to $EXTRA_OPTS via -e\nPassing this options along with default ones as\n${PASSOPTS_ALL}\n"
+else
+	PASSOPTS_ALL="${PASSOPTS}"
+fi
+
+##### Following lsf block will be parsed based on arguments supplied #####
+
+cat << EOF > "${SBATCHOUT}"
+#!/bin/bash
+#SBATCH --job-name=${JOBNAME}                        # name of the job
+#SBATCH --workdir=${CWD}                             # the workding dir for each job
+#SBATCH --output=${STDOUT}                           # output is sent to logfile, stdout + stderr by default
+#SBATCH --error=${STDERR}                            # output is sent to logfile, stdout + stderr by default
+#SBATCH --qos=${QUEUE}                               # Job queue
+#SBATCH --time=${WALLTIME}                      	 # Walltime in minutes
+#SBATCH --mem=${MEMORY}                              # Memory requirements in Kbytes
+#SBATCH --nodes=${NODES}                 		     # Nodes reserved
+#SBATCH --ntasks=${CPU}                 			 # CPU reserved
+#SBATCH --mail-user=$(whoami)@jax.org                # for notifications
+#SBATCH --mail-type=${EMAILOPTS}                     # send email when job ends
+#SBATCH ${PASSOPTS_ALL}                              # extra options
+##SBATCH --nodelist=sumner050,sumner051              # Disabled: force a fixed node
+
+## --- DO NOT EDIT from below here---- ##
+## following will always overwrite previous output file, if any.
+set +o noclobber
+
+## sleep for n seconds before running any command
+FORCEWAIT=\$(shuf -i 2-10 -n 1)
+printf "\nWaiting for %s seconds before starting workflow\n" "\${FORCEWAIT:-10}"
+sleep "\${FORCEWAIT}"
+
+## pass envrionment variables and bash confligs on-the-fly while job is running
+## source default hpcvars.sh
+if [[ -s "\${HOME}"/.hpc_confs/hpcvars.sh && -x "\${HOME}"/.hpc_confs/hpcvars.sh ]]; then
+    # source by prefix . else env variable may not get exported to parent script
+    . "\${HOME}"/.hpc_confs/hpcvars.sh
+
+    printf "####\nPINGSTARTSLACK exported as %s\nPINGENDSLACK exported as %s\n####\n" "\${PINGSTARTSLACK:-NO}" "\${PINGENDSLACK:-NO}"
+fi
+
+$(printf "echo \"BEGIN at \$(date)\"")
+
+## notify slack when job starts if env variable PINGSTARTSLACK is set to YES
+STARTMSG="MYJOB ID: \${SLURM_JOB_ID}: \${SLURM_JOB_NAME} starting at \${PWD} on \$(hostname) for \${USER}"
+
+if [[ "\${PINGSTARTSLACK}" == "YES" && -x "\${HOME}"/bin/pingme ]]; then
+    # allow 5 seconds before exit of parent script so job can ping slack
+    "\${HOME}"/bin/pingme -u "\${USER}" -i "hourglass_flowing_sand" -m "\${STARTMSG}" >> /dev/null 2>&1 &
+    sleep 5
+    echo -e "\n\${STARTMSG}\n"
+else
+	echo -e "\n\${STARTMSG}\n"
+fi
+
+## This will be system default unless overridden by -s YES
+echo "TMPDIR is \${TMPDIR}"
+
+############################### START USER CMDS ################################
+
+$(cat "${MYARGS}")
+
+################################ END USER CMDS #################################
+
+exitstat=\$?
+
+$(printf "echo \"END at \$(date)\"")
+
+## notify slack if error
+if [[ "\${FORCESTOPSLACK}" == "YES" || "\${PINGENDSLACK}" != "YES" ]]; then
+    WARNMSG="MYJOB ID: \${SLURM_JOB_ID}: \${SLURM_JOB_NAME} exited at \${PWD} on \$(hostname) for \${USER} with exit status: \${exitstat}"
+    echo -e "\n\${WARNMSG}\n"
+elif [[ "\${exitstat}" != 0 && -x "\${HOME}"/bin/pingme ]] || [[ "\${exitstat}" != 0 && "\${PINGENDSLACK}" == "YES" && -x "\${HOME}"/bin/pingme ]]; then
+    ERRMSG="MYJOB ID: \${SLURM_JOB_ID}: \${SLURM_JOB_NAME} failed at \${PWD} on \$(hostname) for \${USER} with exit status: \${exitstat}"
+
+    # allow 5 seconds before exit of parent script so job can ping slack
+    if [[ -s "\${HOME}"/bin/pingme && -x "\${HOME}"/bin/pingme ]]; then
+    	"\${HOME}"/bin/pingme -u "\${USER}" -i warning -m "\${ERRMSG}" >> /dev/null 2>&1 &
+        sleep 5
+    fi
+
+    echo -e "\n\${ERRMSG}\n"
+elif [[ "\${exitstat}" == 0 && "\${PINGENDSLACK}" == "YES" && -s "\${HOME}"/bin/pingme ]]; then
+    PASSMSG="MYJOB ID: \${SLURM_JOB_ID}: \${SLURM_JOB_NAME} is complete at \${PWD} on \$(hostname) for \${USER} with exit status: \${exitstat}"
+
+    # allow 5 seconds before exit of parent script so job can ping slack
+    if [[ -s "\${HOME}"/bin/pingme && -x "\${HOME}"/bin/pingme ]]; then
+    	"\${HOME}"/bin/pingme -u "\${USER}" -i white_check_mark -m "\${PASSMSG}" >> /dev/null 2>&1 &
+        sleep 5
+    fi
+
+    echo -e "\n\${PASSMSG}\n"
+fi
+
+$(printf "echo \"exit status was \${exitstat}\"")
+$(printf "exit \${exitstat}")
+
+## END ##
+
+EOF
+
+EXITSTAT=$?
+
+if [[ "$EXITSTAT" != 0 ]]; then
+  echo -e "Something went wrong converting ${SBATCHOUT}\nExiting with error: $EXITSTAT\n" >&1
+  exit 1
+fi
+
+## require dos2unix to convert to unix-compliant file
+dos2unix "${SBATCHOUT}" && \
+echo "jobscript is ready: ${SBATCHOUT}"
+
+if [[ "${SUBMITJOB}" == "YES" ]]; then
+  echo "Submitting job to HPC Sumner" && \
+  sleep 2 && \
+  sbatch "${SBATCHOUT}"
+else
+  echo -e "\nSkipping job submission: ${SBATCHOUT}\nSet -x YES to submit\n" >&1
+fi
+
+## END ##
