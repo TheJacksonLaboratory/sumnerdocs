@@ -1,11 +1,9 @@
 ---
 title: "How to run VEP using singularity"
+authors: Samir B. Amin, @sbamin
 ---
 
->For HPC Sumner at [JAX](https://jax.org)  
->@sbamin  
-
-[![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://jaxreg.jax.org/collections/20)
+[![https://badgen.net/badge/singularity/JAXhub/green](https://badgen.net/badge/singularity/JAXhub/blue)](https://jaxreg.jax.org/collections/21) [![https://badgen.net/badge/vep/v99.2/green](https://badgen.net/badge/vep/v99.2/green)](https://jaxreg.jax.org/containers/203) [![https://badgen.net/badge/vcf2maf/v1.0_a071af6/green](https://badgen.net/badge/vcf2maf/v1.0_a071af6/green)](https://jaxreg.jax.org/containers/205)
 
 ### Install VEP via docker
 
@@ -42,9 +40,8 @@ curl -O ftp://ftp.ensembl.org/pub/release-99/variation/indexed_vep_cache/homo_sa
 tar xzf homo_sapiens_vep_99_GRCh38.tar.gz
 ```
 
-#### IMPORTANT: Using hg19/GRCh37
-
-*   If VCFs for annotations require `hg19/GRCh37` assembly, you need to install valid cache for Grch37 assembly. [Read discussion here](https://github.com/Ensembl/ensembl-vep/issues/407).
+!!! IMPORTANT "Using hg19/GRCh37"
+    If VCFs for annotations require `hg19/GRCh37` assembly, you need to install valid cache for Grch37 assembly. [Read discussion here](https://github.com/Ensembl/ensembl-vep/issues/407).
 
 ```sh
 cd "$RVANNOT"/vep_core/v99
@@ -73,7 +70,8 @@ singularity run "${SINGULARITY_SIF}"/ensembl-vep_v99.2.sif vep --offline --vcf -
 
 *   If you are running vcf2maf, it needs input vcf in uncompressed format. vcf2maf will internally run `vep`, so you may not need to run vep separately.
 
-*   Review how-to-run details at [mskcc/vcf2maf](https://github.com/mskcc/vcf2maf) and by reading manpage. You may endup getting **incorrectly parsed maf** if certain parameters are not specified per requirement, e.g., `--tumor-id` and `--normal-id` requirements for vcfs with tumor, normal samples.
+!!! warning "Read manual before running container"
+    Review how-to-run details at [mskcc/vcf2maf](https://github.com/mskcc/vcf2maf) and by reading manpage. You may endup getting **incorrectly parsed maf** if certain parameters are not specified per requirement, e.g., `--tumor-id` and `--normal-id` requirements for vcfs with tumor, normal samples.
 
 ```sh
 singularity exec "${SINGULARITY_SIF}"/vcf2maf_v1.0_a071af6.sif /opt/vcf2maf/vcf2maf.pl --help
