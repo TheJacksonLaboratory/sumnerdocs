@@ -26,6 +26,7 @@ nav:
       - slurm/how_to_interactive_via_tmux.md
       - slurm/how_to_snakemake_slurm.md
     - 'User Forum (intranet)': 'https://hpctalk.jax.org'
+    - Contributors: 'https://github.com/TheJacksonLaboratory/sumnerdocs/graphs/contributors'
 
 ## Copyright
 copyright: 'Copyright &copy; <a href="https://www.jax.org">The Jackson Laboratory</a> | <a href="https://www.jax.org/terms-of-use">Terms of Use</a>'

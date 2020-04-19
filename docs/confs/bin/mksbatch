@@ -18,15 +18,15 @@ Usage: ${0##*/} -a <path to files containing commands>
         -a  REQUIRED: path to file containing commands to be run on cluster. This file will be copied verbatim following SBATCH arguments.
         -j  job name (default: j<random id>_username)
         -w  work directory (default: present work directory)
+        -P  job partition (default: batch; compute,gpu)
         -q  job queue (default: batch)
-        -t  walltime in HH:MM:SS (default: 02:00:00)
-        -m  memory in gb (default: 12G)
+        -t  walltime in HH:MM:SS (default: 01:00:00)
+        -m  memory in gb (default: 4G)
         -n  number of nodes (default: 1)
-        -c  cpu cores per node (default: 2)
-        -p  email notifications (default: FAIL)
+        -c  cpu cores per node (default: 1)
+        -p  email notifications (default: FAIL; NONE, BEGIN, END, FAIL, REQUEUE, ALL)
         -s  if set to YES, export TMPDIR to /fastscratch/user/tmp (default: NO)
         -e  extra options to SBATCH (will be appended to default ones: "--requeue --export=all")
-        -b  (Unused) node to exclude (default: none)
         -x  Submit job (default: NO; YES to submit)
 
 Example: ${0##*/} -j "dummy" -t 01:00:00 -m 12gb -c 1 -a mycommands.sh
@@ -38,12 +38,13 @@ EOF
 
 if [[ $# == 0 ]];then show_help;exit 1;fi
 
-while getopts "a:j:w:q:t:m:n:c:p:e:s:b:x:h" opt; do
+while getopts "a:j:w:P:q:t:m:n:c:p:e:s:x:h" opt; do
     case "$opt" in
         h) show_help;exit 0;;
         a) MYARGS=$OPTARG;;
         j) JOBNAME=$OPTARG;;
         w) CWD=$OPTARG;;
+		P) PARTITION=$OPTARG;;
         q) QUEUE=$OPTARG;;
         t) WALLTIME=$OPTARG;;
         m) MEMORY=$OPTARG;;
@@ -52,7 +53,6 @@ while getopts "a:j:w:q:t:m:n:c:p:e:s:b:x:h" opt; do
         p) EMAILOPTS=$OPTARG;;
         e) EXTRA_OPTS=$OPTARG;;
 		s) SETTMP=$OPTARG;;
-        b) NODEXCL=$OPTARG;;
 		x) SUBMITJOB=$OPTARG;;
        '?') show_help >&2 exit 1 ;;
     esac
@@ -79,11 +79,12 @@ TMP_JOBNAME=${JOBNAME:-"$DJOBID"}
 JOBNAME=$(printf "%s" "$TMP_JOBNAME")
 
 ## job resources
+PARTITION=${PARTITION:-"compute"}
 QUEUE=${QUEUE:-"batch"}
-WALLTIME=${WALLTIME:-"02:00:00"}
-MEMORY=${MEMORY:-"12G"}
+WALLTIME=${WALLTIME:-"01:00:00"}
+MEMORY=${MEMORY:-"4G"}
 NODES=${NODES:-"1"}
-CPU=${CPU:-"2"}
+CPU=${CPU:-"1"}
 EMAILOPTS=${EMAILOPTS:-"FAIL"}
 SETTMP=${SETTMP:-"NO"}
 
@@ -117,12 +118,6 @@ fi
 STDOUT=$(printf "%s/log_%s.out" "${CWD}" "$JOBNAME")
 STDERR=$(printf "%s/log_%s.err" "${CWD}" "$JOBNAME")
 
-## force a node
-NODEXCL=${NODEXCL:-"NONE"}
-if [[ "$NODEXCL" != "NONE" ]]; then
-	echo -e "WARN: NODEXCL is set to $NODEXCL via -b\nHowever, this does nothing for now.\n" >&2
-fi
-
 ## default extra options
 ## make the jobs re-runnable, pass user env
 PASSOPTS="--requeue --export=all"
@@ -142,7 +137,7 @@ fi
 cat << EOF > "${SBATCHOUT}"
 #!/bin/bash
 #SBATCH --job-name=${JOBNAME}                        # name of the job
-#SBATCH --workdir=${CWD}                             # the workding dir for each job
+#SBATCH --chdir=${CWD}                               # the workding dir for each job
 #SBATCH --output=${STDOUT}                           # output is sent to logfile, stdout + stderr by default
 #SBATCH --error=${STDERR}                            # output is sent to logfile, stdout + stderr by default
 #SBATCH --qos=${QUEUE}                               # Job queue
@@ -153,7 +148,6 @@ cat << EOF > "${SBATCHOUT}"
 #SBATCH --mail-user=$(whoami)@jax.org                # for notifications
 #SBATCH --mail-type=${EMAILOPTS}                     # send email when job ends
 #SBATCH ${PASSOPTS_ALL}                              # extra options
-##SBATCH --nodelist=sumner050,sumner051              # Disabled: force a fixed node
 
 ## --- DO NOT EDIT from below here---- ##
 ## following will always overwrite previous output file, if any.
@@ -171,6 +165,11 @@ if [[ -s "\${HOME}"/.hpc_confs/hpcvars.sh && -x "\${HOME}"/.hpc_confs/hpcvars.sh
     . "\${HOME}"/.hpc_confs/hpcvars.sh
 
     printf "####\nPINGSTARTSLACK exported as %s\nPINGENDSLACK exported as %s\n####\n" "\${PINGSTARTSLACK:-NO}" "\${PINGENDSLACK:-NO}"
+else
+	## disable slack notifications
+	PINGSTARTSLACK="\${PINGSTARTSLACK:-NO}"
+	FORCESTOPSLACK=\${FORCESTOPSLACK:-NO}
+	PINGENDSLACK="\${PINGENDSLACK:-NO}"
 fi
 
 $(printf "echo \"BEGIN at \$(date)\"")

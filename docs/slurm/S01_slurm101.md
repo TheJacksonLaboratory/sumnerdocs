@@ -8,6 +8,8 @@ Slurm cheatsheet
 *   [Tutorials](https://slurm.schedmd.com/tutorials.html)
 *   Available options for [sbatch](https://slurm.schedmd.com/sbatch.html)
 *   Available options for [srun](https://slurm.schedmd.com/srun.html)
+*   [Running jobs](https://www.sherlock.stanford.edu/docs/user-guide/running-jobs/) at [Sherlock at Stanford](https://www.sherlock.stanford.edu/docs/overview/introduction/)
+*   [Running jobs](https://docs.ycrc.yale.edu/clusters-at-yale/job-scheduling/) at [Yale Research Computing](https://docs.ycrc.yale.edu/)
 
 ## mksbatch
 
@@ -63,15 +65,15 @@ Usage: mksbatch -a <path to files containing commands>
         -a  REQUIRED: path to file containing commands to be run on cluster. This file will be copied verbatim following SBATCH arguments.
         -j  job name (default: j<random id>_username)
         -w  work directory (default: present work directory)
+        -P  job partition (default: batch; compute,gpu)
         -q  job queue (default: batch)
-        -t  walltime in HH:MM:SS (default: 02:00:00)
-        -m  memory in gb (default: 12G)
+        -t  walltime in HH:MM:SS (default: 01:00:00)
+        -m  memory in gb (default: 4G)
         -n  number of nodes (default: 1)
-        -c  cpu cores per node (default: 2)
-        -p  email notifications (default: FAIL)
+        -c  cpu cores per node (default: 1)
+        -p  email notifications (default: FAIL; NONE, BEGIN, END, FAIL, REQUEUE, ALL)
         -s  if set to YES, export TMPDIR to /fastscratch/user/tmp (default: NO)
         -e  extra options to SBATCH (will be appended to default ones: "--requeue --export=all")
-        -b  (Unused) node to exclude (default: none)
         -x  Submit job (default: NO; YES to submit)
 
 Example: mksbatch -j "job1" -t 01:00:00 -m 12gb -c 1 -a ~/mycmds.txt
