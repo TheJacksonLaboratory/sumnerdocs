@@ -17,7 +17,9 @@ last_modtime: true
 ## mkdocs will populate pages using alphanumeric sort of all .md files under docs/
 nav:
     - Home: index.md
-    - Set Up Conda: conda/S01_conda.md
+    - Conda Env:
+      - Setup: conda/S01_conda.md
+      - GPU config: conda/S02_gpu_config.md 
     - Set Up Containers:
       - Getting Started: containers/S01_containers.md
       - containers/ensembl-vep.md
