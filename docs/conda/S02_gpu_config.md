@@ -338,3 +338,33 @@ print(x)
 ```
 
 >Above will output a tensor of 5x3 dimensions.
+
+### CuPy and Dask
+
+*   [CuPy](https://cupy.chainer.org): A NumPy-compatible matrix library accelerated by CUDA.
+*   [Dask](https://docs.dask.org/en/latest/install.html)
+
+```sh
+conda activate tf-gpu && \
+conda install -c conda-forge cupy dask dask-ml
+```
+
+*   Test CuPy
+
+```py
+import cupy as cp
+x = cp.arange(6).reshape(2, 3).astype('f')
+x
+
+x.sum(axis=1)
+```
+
+*   Test Dask, more at https://dask.org
+
+```py
+# Arrays implement the Numpy API
+import dask.array as da
+x = da.random.random(size=(10000, 10000),
+                     chunks=(1000, 1000))
+x + x.T - x.mean(axis=0)
+```
