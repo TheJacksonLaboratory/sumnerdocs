@@ -1,0 +1,5 @@
+## where should R save new packages fist - prefer tier 1 over home dir as space
+## is limited in home dir.
+R_LIBS="/projects/foo/sumnerenv_os7/R/pkgs/v3.6:/home/foo/anaconda3/lib/R/library:/home/foo/anaconda3/envs/dev/lib/R/library"
+
+## end ##
